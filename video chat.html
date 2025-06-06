@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Anonymous Chat - Omegle Clone</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --accent: #007bff;
+      --box-bg: #f9f9f9;
+      --box-border: #ccc;
+    }
+
+    body.dark {
+      --bg: #121212;
+      --text: #f0f0f0;
+      --accent: #00aaff;
+      --box-bg: #1e1e1e;
+      --box-border: #333;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: var(--box-bg);
+      border-bottom: 1px solid var(--box-border);
+    }
+
+    .container {
+      flex-grow: 1;
+      text-align: center;
+      padding: 20px;
+    }
+
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    select {
+      padding: 8px 12px;
+      border: 1px solid var(--box-border);
+      border-radius: 5px;
+      font-size: 16px;
+      background-color: var(--box-bg);
+      color: var(--text);
+      margin: 5px;
+    }
+
+    #chatContainer {
+      margin-top: 20px;
+    }
+
+    #chatBox {
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--box-border);
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: var(--box-bg);
+      text-align: left;
+    }
+
+    input[type="text"] {
+      width: 70%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    video {
+      width: 100%;
+      max-height: 300px;
+      border-radius: 10px;
+      margin-top: 10px;
+      background: #000;
+    }
+
+    footer {
+      padding: 30px 20px;
+      background-color: var(--box-bg);
+      color: var(--text);
+      text-align: center;
+      border-top: 1px solid var(--box-border);
+      font-size: 14px;
+    }
+
+    footer a {
+      color: var(--accent);
+      margin: 0 10px;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <button id="toggleMode">Toggle Dark Mode</button>
+    <h2>Anonymous Chat</h2>
+    <div style="width: 120px;"></div>
+  </div>
+
+  <div class="container">
+    <!-- Gender and Location Selectors -->
+    <div id="userPreferences">
+      <select id="locationSelect">
+        <option value="">Select Location</option>
+        <option value="USA">USA</option>
+        <option value="UK">UK</option>
+        <option value="Germany">Germany</option>
+        <option value="India">India</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <select id="genderSelect">
+        <option value="">Select Gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+    </div>
+
+    <button id="startChat">Start Chat</button>
+
+    <div id="chatContainer" class="hidden">
+      <video id="localVideo" autoplay muted playsinline></video>
+      <div id="chatBox"></div>
+      <input type="text" id="messageInput" placeholder="Type your message..." />
+      <br />
+      <button id="sendButton">Send</button>
+      <button id="leaveChat">Leave Chat</button>
+    </div>
+  </div>
+
+  <footer>
+    <div style="max-width: 800px; margin: auto;">
+      <h2 style="margin-bottom: 10px;">About Anonymous Chat</h2>
+      <p style="margin-bottom: 15px;">
+        Anonymous Chat is a free, browser-based chat platform inspired by Omegle, allowing users to instantly connect and communicate with strangers through text and video in real time.
+      </p>
+      <p style="margin-bottom: 20px;">
+        Whether you're looking to make new friends, practice language skills, or just chat with someone from around the world, our platform offers a simple and anonymous experience directly in your browser.
+      </p>
+      <div style="margin-bottom: 15px;">
+        <a href="#">Terms of Use</a> |
+        <a href="#">Privacy Policy</a> |
+        <a href="#">Contact</a>
+      </div>
+      <p style="font-size: 13px; color: gray;">&copy; 2025 Anonymous Chat. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    const startBtn = document.getElementById('startChat');
+    const leaveBtn = document.getElementById('leaveChat');
+    const chatContainer = document.getElementById('chatContainer');
+    const chatBox = document.getElementById('chatBox');
+    const sendButton = document.getElementById('sendButton');
+    const messageInput = document.getElementById('messageInput');
+    const toggleMode = document.getElementById('toggleMode');
+    const localVideo = document.getElementById('localVideo');
+
+    startBtn.onclick = async () => {
+      const selectedLocation = document.getElementById('locationSelect').value;
+      const selectedGender = document.getElementById('genderSelect').value;
+
+      console.log("User selected:", { selectedLocation, selectedGender });
+
+      chatContainer.classList.remove('hidden');
+      startBtn.style.display = 'none';
+      chatBox.innerHTML += `<p><em>You're now chatting with a stranger!</em></p>`;
+      await startCamera();
+    };
+
+    leaveBtn.onclick = () => {
+      chatContainer.classList.add('hidden');
+      startBtn.style.display = 'inline-block';
+      chatBox.innerHTML = '';
+      stopCamera();
+    };
+
+    sendButton.onclick = sendMessage;
+    messageInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (message) {
+        chatBox.innerHTML += `<p><strong>You:</strong> ${message}</p>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+        messageInput.value = '';
+
+        setTimeout(() => {
+          chatBox.innerHTML += `<p><strong>Stranger:</strong> ${randomReply()}</p>`;
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }, 1000);
+      }
+    }
+
+    function randomReply() {
+      const replies = [
+        "Hi!",
+        "How are you?",
+        "That's cool!",
+        "Tell me more.",
+        "Nice!",
+        "What brings you here?",
+        "Interesting!"
+      ];
+      return replies[Math.floor(Math.random() * replies.length)];
+    }
+
+    toggleMode.onclick = () => {
+      document.body.classList.toggle('dark');
+    };
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        localVideo.srcObject = stream;
+      } catch (err) {
+        alert('Error accessing webcam: ' + err.message);
+      }
+    }
+
+    function stopCamera() {
+      const stream = localVideo.srcObject;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        localVideo.srcObject = null;
+      }
+    }
+  </script>
+</body>
+</html>
+
+
+
+
